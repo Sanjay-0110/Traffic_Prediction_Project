@@ -13,7 +13,7 @@ from geopy.distance import geodesic
 import networkx as nx
 
 # Load the trained LSTM model
-model = load_model("MyLSTM_1.keras")
+model = load_model("Models/MyLSTM_1.keras")
 
 # Set Streamlit page config
 st.set_page_config(page_title="Traffic Volume Prediction", page_icon="🚦", layout="wide")

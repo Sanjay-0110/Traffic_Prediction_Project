@@ -3,11 +3,19 @@ import folium
 from streamlit_folium import folium_static
 import streamlit as st
 from geopy.distance import geodesic
+import sys
+import os
 import requests
 import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from config import API_KEY
+
+print(API_KEY)
+
 # TomTom API Key (  Replace with your actual API key)
-TOMTOM_API_KEY = "3nVe88xLTd0ma3Yum5CG6uqB1HivAGfp"
+TOMTOM_API_KEY = API_KEY
 
 # Define key locations along I-94 in Minnesota (latitude, longitude)
 nodes = {

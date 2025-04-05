@@ -1,4 +1,6 @@
 import streamlit as st
+import sys
+import os
 import pandas as pd
 import plotly.express as px
 import numpy as np
@@ -8,6 +10,10 @@ import time
 import folium
 from streamlit_folium import folium_static
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from config import API_KEY
+
 # Set page config
 st.set_page_config(page_title="🚦 Traffic Flow Dashboard", page_icon="🚗", layout="wide")
 
@@ -16,7 +22,7 @@ st.sidebar.page_link("webapp.py", label="🚗 Traffic Prediction")
 st.sidebar.page_link("Pages/accurary.py", label="📊 Model Accuracy & Findings")
 
 # TomTom API Key
-API_KEY = "rPL3ekmb1C0IxwN1fkVaOyrQ85DZgk4p"
+API_key = API_KEY
 
 # Title
 st.title("🚦 Traffic Flow Dashboard - Interstate 94")
@@ -24,12 +30,12 @@ st.title("🚦 Traffic Flow Dashboard - Interstate 94")
 # Load dataset
 @st.cache_data
 def load_data():
-    df = pd.read_csv("/Data/Metro_Interstate_Traffic_Volume.csv", engine="python")  # Replace with actual path
+    df = pd.read_csv("Data/Metro_Interstate_Traffic_Volume.csv", engine="python")  # Replace with actual path
     return df
 # Function to get live traffic flow
 def get_traffic_flow(lat, lon):
     url = "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json"
-    params = {"key": API_KEY, "point": f"{lat},{lon}"}
+    params = {"key": API_key, "point": f"{lat},{lon}"}
     response = requests.get(url, params=params)
     return response.json()
 
