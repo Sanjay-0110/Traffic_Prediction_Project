@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 # Load the trained LSTM model
-model = load_model("C:/Projects/Personel_Project/Traffic_Congestion_Prediction/pythonProject/MyLSTM_1.keras")
+model = load_model("Models/MyLSTM_1.keras")
 
 # Set Streamlit page config
 st.set_page_config(page_title="Model Accuracy & Findings", page_icon="📊", layout="wide")
@@ -55,10 +55,10 @@ col1, col2 = st.columns(2)
 
 # Add images to each column
 with col1:
-    st.image("Output_images/img_1.png", caption="This gives the model access to the most important frequency features.  Note the obvious peaks at frequencies near 1/year and 1/day", use_container_width=True)
+    st.image("Reports/Figures/img_1.png", caption="This gives the model access to the most important frequency features.  Note the obvious peaks at frequencies near 1/year and 1/day", use_container_width=True)
 
 with col2:
-    st.image("Output_images/img_2.png", caption="Time of day signal", use_container_width=True)
+    st.image("Reports/Figures/img_2.png", caption="Time of day signal", use_container_width=True)
 st.markdown("""
 ### Model Development:
 We experimented with various **hyperparameters** to optimize performance:
@@ -71,7 +71,7 @@ Our best-performing model:
 - **Two dense layers (512 units each) and a final dense output layer.**
 - **Maintained low variance over more epochs.**
 """)
-st.image("C:/Projects/Personel_Project/Traffic_Congestion_Prediction/pythonProject/Output_images/img.png", caption="Model Performance and Predictions", use_container_width=False)
+st.image("Reports/Figures/img.png", caption="Model Performance and Predictions", use_container_width=False)
 st.markdown("""
 ### Conclusion:
 - **Bi-Directional LSTM performed best** with the least variance.

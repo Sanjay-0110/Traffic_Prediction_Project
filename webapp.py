@@ -96,7 +96,7 @@ real_prediction = 0
 # Predict Traffic Volume (New Update code)
 if st.button("🚗 Predict Traffic Volume"):
     with st.spinner("🔄 Predicting Traffic Volume..."):
-        prediction = model.predict(input_sequence)[0]
+        prediction = model.predict(input_sequence)[0][0]
         real_prediction = int(prediction * (2000 - 1000) + 1000)
 
     # Define the color for styling but not for delta_color
@@ -128,7 +128,7 @@ minneapolis_coords = (44.9778, -93.2650)
 st_paul_coords = (44.9537, -93.0900)
 m = folium.Map(location=[44.9650, -93.1775], zoom_start=12)
 
-''''# Fetch route from OSRM API
+# Fetch route from OSRM API
 route_url = f"https://router.project-osrm.org/route/v1/driving/{minneapolis_coords[1]},{minneapolis_coords[0]};{st_paul_coords[1]},{st_paul_coords[0]}?overview=full&geometries=geojson"
 response = requests.get(route_url)
 data = response.json()
@@ -146,7 +146,7 @@ st.write("This map shows the route between Minneapolis and St. Paul with traffic
 folium_static(m)
 
 st.divider()
-'''
+
 st.subheader("The Optimal Route to Travel")
 # Define key locations along I-94 in Minnesota (latitude, longitude)
 nodes = {
