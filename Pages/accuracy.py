@@ -5,16 +5,18 @@ from tensorflow.keras.saving import load_model
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-# Load the trained LSTM model
-model = load_model("Models/MyLSTM_1.keras")
-
-# Set Streamlit page config
 st.set_page_config(page_title="Model Accuracy & Findings", page_icon="📊", layout="wide")
+
+@st.cache_resource
+def load_model_cached(path):
+    return load_model(path)
+
+model = load_model_cached("Models/MyLSTM_1.keras")
 
 st.sidebar.title("Navigation")
 st.sidebar.page_link("webapp.py", label="🚗 Traffic Prediction")
-st.sidebar.page_link("Pages/accurary.py", label="📊 Model Accuracy & Findings")
-st.sidebar.page_link("Pages/Traffic_flow_dashboard.py", label="🔲 Dashboard Page")
+st.sidebar.page_link("pages/accuracy.py", label="📊 Model Accuracy & Findings")
+st.sidebar.page_link("pages/Traffic_flow_dashboard.py", label="🔲 Dashboard Page")
 
 # Title of the new page
 st.title("📊 Model Accuracy & Findings")

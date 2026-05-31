@@ -19,7 +19,7 @@ st.set_page_config(page_title="🚦 Traffic Flow Dashboard", page_icon="🚗", l
 
 st.sidebar.title("Navigation")
 st.sidebar.page_link("webapp.py", label="🚗 Traffic Prediction")
-st.sidebar.page_link("Pages/accurary.py", label="📊 Model Accuracy & Findings")
+st.sidebar.page_link("pages/accuracy.py", label="📊 Model Accuracy & Findings")
 
 # TomTom API Key
 API_key = API_KEY

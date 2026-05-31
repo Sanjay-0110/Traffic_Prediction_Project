@@ -12,16 +12,18 @@ from streamlit_extras.metric_cards import style_metric_cards
 from geopy.distance import geodesic
 import networkx as nx
 
-# Load the trained LSTM model
-model = load_model("Models/MyLSTM_1.keras")
-
-# Set Streamlit page config
 st.set_page_config(page_title="Traffic Volume Prediction", page_icon="🚦", layout="wide")
+
+@st.cache_resource
+def load_model_cached(path):
+    return load_model(path)
+
+model = load_model_cached("Models/MyLSTM_1.keras")
 
 st.sidebar.title("Navigation")
 st.sidebar.page_link("webapp.py", label="🚗 Traffic Prediction")
-st.sidebar.page_link("Pages/accurary.py", label="📊 Model Accuracy & Findings")
-st.sidebar.page_link("Pages/Traffic_flow_dashboard.py", label="🔲 Dashboard Page")
+st.sidebar.page_link("pages/accuracy.py", label="📊 Model Accuracy & Findings")
+st.sidebar.page_link("pages/Traffic_flow_dashboard.py", label="🔲 Dashboard Page")
 
 # Custom CSS for styling
 st.markdown("""
