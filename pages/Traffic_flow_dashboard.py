@@ -20,6 +20,7 @@ st.set_page_config(page_title="🚦 Traffic Flow Dashboard", page_icon="🚗", l
 st.sidebar.title("Navigation")
 st.sidebar.page_link("webapp.py", label="🚗 Traffic Prediction")
 st.sidebar.page_link("pages/accuracy.py", label="📊 Model Accuracy & Findings")
+st.sidebar.page_link("pages/Traffic_flow_dashboard.py", label="🔲 Dashboard Page")
 
 # TomTom API Key
 API_key = API_KEY
@@ -32,26 +33,34 @@ st.title("🚦 Traffic Flow Dashboard - Interstate 94")
 def load_data():
     df = pd.read_csv("Data/Metro_Interstate_Traffic_Volume.csv", engine="python")  # Replace with actual path
     return df
+
+# Call a TomTom endpoint; return {} on network/API errors so the page keeps rendering
+def fetch_json(url, params):
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except (requests.RequestException, ValueError):
+        return {}
+
 # Function to get live traffic flow
 def get_traffic_flow(lat, lon):
     url = "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json"
     params = {"key": API_key, "point": f"{lat},{lon}"}
-    response = requests.get(url, params=params)
-    return response.json()
+    return fetch_json(url, params)
 
 # Function to get travel time
 def get_travel_time(start_lat, start_lon, end_lat, end_lon):
     url = f"https://api.tomtom.com/routing/1/calculateRoute/{start_lat},{start_lon}:{end_lat},{end_lon}/json"
     params = {"key": API_KEY}
-    response = requests.get(url, params=params)
-    return response.json()
+    return fetch_json(url, params)
 
-# Function to get traffic incidents
+# Function to get traffic incidents (bbox order is minLon,minLat,maxLon,maxLat)
 def get_traffic_incidents(bounding_box):
     url = "https://api.tomtom.com/traffic/services/5/incidentDetails"
-    params = {"key": API_KEY, "bbox": bounding_box, "language": "en-US"}
-    response = requests.get(url, params=params)
-    return response.json()
+    params = {"key": API_KEY, "bbox": bounding_box, "language": "en-US",
+              "fields": "{incidents{geometry{type,coordinates},properties{iconCategory,events{description},from,to}}}"}
+    return fetch_json(url, params)
 
 # Function to get historical traffic trends
 def get_traffic_trends():
@@ -92,8 +101,10 @@ if traffic_data and "flowSegmentData" in traffic_data:
         st.metric(label="🔄 Free Flow Speed (km/h)", value=traffic_info.get("freeFlowSpeed", "N/A"))
 
     with col2:
+        current_tt = traffic_info.get("currentTravelTime")
+        free_flow_tt = traffic_info.get("freeFlowTravelTime")
         st.metric(label="⏳ Traffic Delay (seconds)",
-                  value=traffic_info.get("currentTravelTime", "N/A") - traffic_info.get("freeFlowTravelTime", "N/A"))
+                  value=current_tt - free_flow_tt if current_tt is not None and free_flow_tt is not None else "N/A")
         st.metric(label="🛑 Road Closed?", value="Yes" if traffic_info.get("roadClosure", False) else "No")
 
     with col3:
@@ -111,8 +122,8 @@ travel_times = get_travel_time(44.9778, -93.2650, 44.9537, -93.0900)  # Minneapo
 if travel_times and "routes" in travel_times:
     route_info = travel_times["routes"][0]["summary"]
     travel_time_value = route_info.get("travelTimeInSeconds", 0) / 60  # Convert to minutes
-    free_flow_time = route_info.get("trafficDelayInSeconds", 0) / 60  # Convert to minutes
-    total_delay = travel_time_value - free_flow_time  # Calculate traffic delay
+    total_delay = route_info.get("trafficDelayInSeconds", 0) / 60  # Convert to minutes
+    free_flow_time = travel_time_value - total_delay  # Travel time without traffic delay
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -146,14 +157,24 @@ else:
 st.divider()
 # Live Alerts & Notifications
 st.subheader("Live Alerts & Notifications")
-alerts = get_traffic_incidents("44.90,-93.30,45.00,-93.00")  # Bounding box for Minneapolis-St. Paul
-if alerts:
-    for alert in alerts.get("incidents", []):
-        st.error(f"🚨 {alert['type']}: {alert['description']} at {alert['location']['point']['latitude']}, {alert['location']['point']['longitude']}")
+alerts = get_traffic_incidents("-93.30,44.90,-93.00,45.00")  # Bounding box for Minneapolis-St. Paul
+incident_types = {0: "Unknown", 1: "Accident", 2: "Fog", 3: "Dangerous Conditions", 4: "Rain", 5: "Ice",
+                  6: "Traffic Jam", 7: "Lane Closed", 8: "Road Closed", 9: "Road Works", 10: "Wind",
+                  11: "Flooding", 14: "Broken Down Vehicle"}
+incidents = alerts.get("incidents", [])
+if incidents:
+    st.caption(f"{len(incidents)} active incidents (showing up to 10)")
+    for alert in incidents[:10]:
+        props = alert.get("properties", {})
+        incident_type = incident_types.get(props.get("iconCategory"), "Incident")
+        description = ", ".join(e.get("description", "") for e in props.get("events", [])) or "No details"
+        geometry = alert.get("geometry", {})
+        coords = geometry.get("coordinates") or []
+        point = coords if geometry.get("type") == "Point" else (coords[0] if coords else None)  # [lon, lat]
+        location = f" ({point[1]:.4f}, {point[0]:.4f})" if point else ""
+        st.error(f"🚨 {incident_type}: {description} — {props.get('from', '?')} to {props.get('to', '?')}{location}")
 else:
-    st.write("No Active Alerts Detected")
     st.success("No active alerts")
-st.write("No Active Alerts Detected")
 st.divider()
 # Hourly & Daily Traffic Trends
 st.subheader("📊 Real Time Hourly & Daily Traffic Trends")
@@ -235,7 +256,7 @@ with col4:
     selected_holiday = st.selectbox("Select a Holiday", unique_holidays, key="holiday_selectbox")
 
     # Filter the dataset
-    df_filtered = df[df["holiday"] == selected_holiday]
+    df_filtered = df[df["holiday"] == selected_holiday].copy()
 
     # Aggregate data by day
     df_filtered["date"] = pd.to_datetime(df_filtered["date_time"]).dt.date
